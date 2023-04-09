@@ -1,15 +1,19 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using TMPro;
 public class GameManager : MonoBehaviour
 {
     public GameBoard board;
+    public TextMeshProUGUI turnCounterText;
+    public GameObject reshufflePanel;
 
     private GameObject startingPiece;
     private List<GameObject> selectedPieces;
     private Vector2 currentMousePosition;
     private SpriteRenderer selectedSpriteRenderer;
     private Color redColor = new Color(1f, 0f, 0f, 1f);
+    private int turnCounter = 0;
 
     void Start()
     {
@@ -18,6 +22,9 @@ public class GameManager : MonoBehaviour
         selectedSpriteRenderer = new GameObject("SelectedSpriteRenderer").AddComponent<SpriteRenderer>();
         selectedSpriteRenderer.color = redColor;
         selectedSpriteRenderer.enabled = false;
+        reshufflePanel.SetActive(false);
+        StartCoroutine(CheckForReshuffle());
+
     }
 
     void Update()
@@ -74,6 +81,10 @@ public class GameManager : MonoBehaviour
                     Destroy(piece);
                     board.SpawnNewPiece(x, y);
                 }
+
+                // Increment turnCounter and update the UI
+                turnCounter++;
+                turnCounterText.SetText($"Turns: {turnCounter}");
             }
 
             // reset the color of all selected pieces
@@ -92,11 +103,17 @@ public class GameManager : MonoBehaviour
         {
             selectedSpriteRenderer.transform.position = startingPiece.transform.position;
         }
+
+        if (!board.CheckForPossibleMatches())
+        {
+            board.ResetBoard();
+        }
     }
 
     GameObject GetPieceAtMousePosition()
     {
-        RaycastHit2D hit = Physics2D.Raycast(currentMousePosition, Vector2.zero);
+        int layerMask = 1 << LayerMask.NameToLayer("Ingredient");
+        RaycastHit2D hit = Physics2D.Raycast(currentMousePosition, Vector2.zero, Mathf.Infinity, layerMask);
 
         if (hit.collider != null)
         {
@@ -121,4 +138,25 @@ public class GameManager : MonoBehaviour
 
         return false;
     }
+
+    IEnumerator ShowReshuffleMessage()
+    {
+        reshufflePanel.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        reshufflePanel.SetActive(false);
+    }
+    IEnumerator CheckForReshuffle()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(1f); // Check for reshuffle every second
+
+            if (!board.CheckForPossibleMatches())
+            {
+                StartCoroutine(ShowReshuffleMessage());
+                yield return board.ResetBoard();
+            }
+        }
+    }
+
 }
