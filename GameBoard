@@ -42,4 +42,79 @@ public class GameBoard : MonoBehaviour
         newPiece.transform.parent = transform;
         gamePiecesGrid[x, y] = newPiece;
     }
+    public bool CheckForPossibleMatches()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                GameObject currentPiece = gamePiecesGrid[x, y];
+
+                if (x < width - 1)
+                {
+                    GameObject rightNeighbor = gamePiecesGrid[x + 1, y];
+                    if (currentPiece.tag == rightNeighbor.tag)
+                    {
+                        if (y < height - 1)
+                        {
+                            GameObject upNeighbor = gamePiecesGrid[x, y + 1];
+                            if (rightNeighbor.tag == upNeighbor.tag)
+                            {
+                                return true;
+                            }
+                        }
+                        if (y > 0)
+                        {
+                            GameObject downNeighbor = gamePiecesGrid[x, y - 1];
+                            if (rightNeighbor.tag == downNeighbor.tag)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                if (y < height - 1)
+                {
+                    GameObject upNeighbor = gamePiecesGrid[x, y + 1];
+                    if (currentPiece.tag == upNeighbor.tag)
+                    {
+                        if (x < width - 1)
+                        {
+                            GameObject rightNeighbor = gamePiecesGrid[x + 1, y];
+                            if (upNeighbor.tag == rightNeighbor.tag)
+                            {
+                                return true;
+                            }
+                        }
+                        if (x > 0)
+                        {
+                            GameObject leftNeighbor = gamePiecesGrid[x - 1, y];
+                            if (upNeighbor.tag == leftNeighbor.tag)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    public IEnumerator ResetBoard()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (gamePiecesGrid[x, y] != null)
+                {
+                    Destroy(gamePiecesGrid[x, y]);
+                }
+            }
+        }
+        yield return null;
+        SetupBoard();
+    }
+
 }
