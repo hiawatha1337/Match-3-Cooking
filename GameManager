@@ -8,11 +8,16 @@ public class GameManager : MonoBehaviour
     private GameObject startingPiece;
     private List<GameObject> selectedPieces;
     private Vector2 currentMousePosition;
+    private SpriteRenderer selectedSpriteRenderer;
+    private Color redColor = new Color(1f, 0f, 0f, 1f);
 
     void Start()
     {
         board = FindObjectOfType<GameBoard>();
         selectedPieces = new List<GameObject>();
+        selectedSpriteRenderer = new GameObject("SelectedSpriteRenderer").AddComponent<SpriteRenderer>();
+        selectedSpriteRenderer.color = redColor;
+        selectedSpriteRenderer.enabled = false;
     }
 
     void Update()
@@ -25,7 +30,11 @@ public class GameManager : MonoBehaviour
 
             if (startingPiece != null)
             {
+                selectedPieces.Clear();
                 selectedPieces.Add(startingPiece);
+                selectedSpriteRenderer.enabled = true;
+                selectedSpriteRenderer.transform.position = startingPiece.transform.position;
+                startingPiece.GetComponent<SpriteRenderer>().color = redColor;
             }
         }
 
@@ -38,6 +47,7 @@ public class GameManager : MonoBehaviour
                 if (IsNeighboringPiece(currentPiece) && currentPiece.tag == startingPiece.tag)
                 {
                     selectedPieces.Add(currentPiece);
+                    currentPiece.GetComponent<SpriteRenderer>().color = redColor;
                 }
             }
         }
@@ -56,8 +66,21 @@ public class GameManager : MonoBehaviour
                 }
             }
 
+            // reset the color of all selected pieces
+            foreach (GameObject piece in selectedPieces)
+            {
+                piece.GetComponent<SpriteRenderer>().color = Color.white;
+            }
+
             selectedPieces.Clear();
             startingPiece = null;
+            selectedSpriteRenderer.enabled = false;
+        }
+
+        // update the position of the selection sprite
+        if (startingPiece != null)
+        {
+            selectedSpriteRenderer.transform.position = startingPiece.transform.position;
         }
     }
 
@@ -80,7 +103,7 @@ public class GameManager : MonoBehaviour
             GameObject lastPiece = selectedPieces[selectedPieces.Count - 1];
             float distance = Vector2.Distance(lastPiece.transform.position, piece.transform.position);
 
-            if (distance <= 1.1f)
+            if (distance <= 1.1f && piece.tag == startingPiece.tag)
             {
                 return true;
             }
