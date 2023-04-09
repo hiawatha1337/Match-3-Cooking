@@ -1,0 +1,91 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GameManager : MonoBehaviour
+{
+    public GameBoard board;
+
+    private GameObject startingPiece;
+    private List<GameObject> selectedPieces;
+    private Vector2 currentMousePosition;
+
+    void Start()
+    {
+        board = FindObjectOfType<GameBoard>();
+        selectedPieces = new List<GameObject>();
+    }
+
+    void Update()
+    {
+        currentMousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            startingPiece = GetPieceAtMousePosition();
+
+            if (startingPiece != null)
+            {
+                selectedPieces.Add(startingPiece);
+            }
+        }
+
+        if (Input.GetMouseButton(0) && startingPiece != null)
+        {
+            GameObject currentPiece = GetPieceAtMousePosition();
+
+            if (currentPiece != null && !selectedPieces.Contains(currentPiece))
+            {
+                if (IsNeighboringPiece(currentPiece) && currentPiece.tag == startingPiece.tag)
+                {
+                    selectedPieces.Add(currentPiece);
+                }
+            }
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            if (selectedPieces.Count >= 3)
+            {
+                foreach (GameObject piece in selectedPieces)
+                {
+                    int x = Mathf.RoundToInt(piece.transform.position.x);
+                    int y = Mathf.RoundToInt(piece.transform.position.y);
+
+                    Destroy(piece);
+                    board.SpawnNewPiece(x, y);
+                }
+            }
+
+            selectedPieces.Clear();
+            startingPiece = null;
+        }
+    }
+
+    GameObject GetPieceAtMousePosition()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(currentMousePosition, Vector2.zero);
+
+        if (hit.collider != null)
+        {
+            return hit.collider.gameObject;
+        }
+
+        return null;
+    }
+
+    bool IsNeighboringPiece(GameObject piece)
+    {
+        if (selectedPieces.Count > 0)
+        {
+            GameObject lastPiece = selectedPieces[selectedPieces.Count - 1];
+            float distance = Vector2.Distance(lastPiece.transform.position, piece.transform.position);
+
+            if (distance <= 1.1f)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
