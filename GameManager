@@ -50,6 +50,16 @@ public class GameManager : MonoBehaviour
                     currentPiece.GetComponent<SpriteRenderer>().color = redColor;
                 }
             }
+            else if (currentPiece != null && selectedPieces.Contains(currentPiece))
+            {
+                int currentIndex = selectedPieces.IndexOf(currentPiece);
+                for (int i = selectedPieces.Count - 1; i > currentIndex; i--)
+                {
+                    GameObject deselectedPiece = selectedPieces[i];
+                    deselectedPiece.GetComponent<SpriteRenderer>().color = Color.white;
+                    selectedPieces.Remove(deselectedPiece);
+                }
+            }
         }
 
         if (Input.GetMouseButtonUp(0))
