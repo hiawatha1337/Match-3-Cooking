@@ -1,0 +1,79 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public class SimpleScoringSystem : MonoBehaviour
+{
+    private List<IngredientScoreDisplay> ingredientScoreDisplays;
+    private Dictionary<string, int> ingredientPoints;
+
+    void Start()
+    {
+        ingredientPoints = new Dictionary<string, int>();
+        ingredientScoreDisplays = new List<IngredientScoreDisplay>(FindObjectsOfType<IngredientScoreDisplay>());
+    }
+    void Update()
+    {
+        foreach (IngredientScoreDisplay display in ingredientScoreDisplays)
+        {
+            display.UpdateUI();
+        }
+    }
+
+    public void AddPoints(string ingredient, int chainLength, bool powerUpActive)
+    {
+        if (!ingredientPoints.ContainsKey(ingredient))
+        {
+            ingredientPoints[ingredient] = 0;
+        }
+
+        int points = chainLength * chainLength;
+        if (powerUpActive)
+        {
+            points *= 2; // Double the points when the power-up is active
+        }
+        ingredientPoints[ingredient] += points;
+    }
+
+    public int GetPoints(string ingredient)
+    {
+        if (ingredientPoints.ContainsKey(ingredient))
+        {
+            return ingredientPoints[ingredient];
+        }
+
+        return 0;
+    }
+
+    public bool AreAllSlidersFull()
+    {
+        foreach (IngredientScoreDisplay display in ingredientScoreDisplays)
+        {
+            if (display.scoreSlider.value < 1.0f)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int GetTotalScore()
+    {
+        int totalScore = 0;
+        foreach (int score in ingredientPoints.Values)
+        {
+            totalScore += score;
+        }
+        return totalScore;
+    }
+
+    public void ResetSliders()
+    {
+        foreach (IngredientScoreDisplay display in ingredientScoreDisplays)
+        {
+            display.ResetSlider();
+            display.ResetCheckmark(); // Reset the checkmark
+            display.UpdateUI(); // Update the UI
+        }
+    }
+
+}
