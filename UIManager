@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
@@ -6,6 +7,8 @@ public class UIManager : MonoBehaviour
     public GameObject endGameScreen;
     public GameObject highscoreScreen;
     public GameManager gameManager;
+    public TextMeshProUGUI highscoreText;
+    public TMP_InputField playerNameInputField;
 
     private void Start()
     {
@@ -31,12 +34,16 @@ public class UIManager : MonoBehaviour
         startingScreen.SetActive(false);
         endGameScreen.SetActive(false);
         highscoreScreen.SetActive(true);
+
+        UpdateHighscoreText();
     }
 
     public void StartGame()
     {
         // Hide starting screen and show game elements
         startingScreen.SetActive(false);
+
+        gameManager.ResetGame();
     }
 
     public void RestartGame()
@@ -45,6 +52,26 @@ public class UIManager : MonoBehaviour
         GameManager gameManager = FindObjectOfType<GameManager>();
         gameManager.ResetGame();
         ShowStartingScreen();
+    }
+
+    public void SaveHighscoreAndShowHighscoreScreen()
+    {
+        string playerName = playerNameInputField.text;
+        gameManager.SaveHighscore(playerName);
+        ShowHighscoreScreen();
+    }
+
+    private void UpdateHighscoreText()
+    {
+        string highscoreListText = "";
+        for (int i = 1; i <= 10; i++)
+        {
+            int highscore = PlayerPrefs.GetInt($"Highscore{i}", 0);
+            string highscorePlayer = PlayerPrefs.GetString($"HighscorePlayer{i}", "N/A");
+
+            highscoreListText += $"{i}. {highscorePlayer}: {highscore}\n";
+        }
+        highscoreText.SetText(highscoreListText);
     }
 
 }
