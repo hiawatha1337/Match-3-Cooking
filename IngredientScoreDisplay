@@ -1,0 +1,44 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class IngredientScoreDisplay : MonoBehaviour
+{
+    public string ingredientTag;
+    public Image ingredientIcon;
+    private SimpleScoringSystem scoringSystem;
+    public Slider scoreSlider;
+    public Image checkmarkImage; // Reference to the checkmark image
+
+    void Start()
+    {
+        scoringSystem = FindObjectOfType<SimpleScoringSystem>();
+    }
+
+    public void UpdateUI()
+    {
+        int score = scoringSystem.GetPoints(ingredientTag);
+        int maxScore = 50; // Set this to the maximum score needed for the level
+        float scorePercentage = (float)score / maxScore;
+        scoreSlider.value = scorePercentage;
+
+        // Show the checkmark when the slider is full
+        if (scorePercentage >= 1.0f)
+        {
+            checkmarkImage.enabled = true;
+        }
+        else
+        {
+            checkmarkImage.enabled = false;
+        }
+    }
+
+    public void ResetSlider()
+    {
+        scoreSlider.value = 0f;
+    }
+
+    public void ResetCheckmark()
+    {
+        checkmarkImage.enabled = false;
+    }
+}
