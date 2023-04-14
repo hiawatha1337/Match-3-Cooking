@@ -1,0 +1,32 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ScoreDisplayController : MonoBehaviour
+{
+    public List<IngredientScoreController> ingredientScoreControllers;
+    private SimpleScoringSystem scoringSystem;
+
+    void Start()
+    {
+        scoringSystem = FindObjectOfType<SimpleScoringSystem>();
+    }
+
+    void Update()
+    {
+        foreach (IngredientScoreController controller in ingredientScoreControllers)
+        {
+            string ingredient = controller.ingredientTag;
+            int score = scoringSystem.GetPoints(ingredient);
+            float scoreValue = CalculateScoreValue(score);
+            controller.SetIngredient(controller.ingredientIcon.sprite, scoreValue);
+        }
+    }
+
+    private float CalculateScoreValue(int score)
+    {
+        // Calculate the score value for the Slider here. This should be a float value between 0 and 1.
+        // For example, if you want the Slider to be full when the score reaches 100 points, you can use:
+        float maxScore = 100f;
+        return Mathf.Clamp01(score / maxScore);
+    }
+}
