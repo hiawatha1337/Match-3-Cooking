@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class SimpleScoringSystem : MonoBehaviour
 {
@@ -43,6 +44,13 @@ public class SimpleScoringSystem : MonoBehaviour
 
         return 0;
     }
+    public void ResetIngredientPoints()
+    {
+        foreach (string ingredient in ingredientPoints.Keys.ToList())
+        {
+            ingredientPoints[ingredient] = 0;
+        }
+    }
 
     public bool AreAllSlidersFull()
     {
@@ -75,5 +83,4 @@ public class SimpleScoringSystem : MonoBehaviour
             display.UpdateUI(); // Update the UI
         }
     }
-
 }
