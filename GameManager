@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI totalScoreText; // To display the total score
     public UIManager uiManager;
     public PowerUpManager powerUpManager;
+    public GameObject endingScreen;
 
     private GameObject startingPiece;
     private List<GameObject> selectedPieces;
@@ -226,14 +227,55 @@ public class GameManager : MonoBehaviour
 
         // Reset the turn counter
         turnCounter = 0;
+        turnCounterText.SetText($"Turns: {turnCounter}");
 
         // Reset the game state
         isGameOver = false;
         gameStarted = false;
 
-        // Reset the scoring system
+        scoringSystem.ResetIngredientPoints();
         scoringSystem.ResetSliders();
+        powerUpManager.ResetPowerUps();
 
+        endingScreen.SetActive(false);
+
+        // Start the game again
+        StartGame();
+    }
+
+    public void SaveHighscore(string playerName)
+    {
+        int currentScore = scoringSystem.GetTotalScore();
+        for (int i = 1; i <= 10; i++)
+        {
+            if (!PlayerPrefs.HasKey($"Highscore{i}"))
+            {
+                PlayerPrefs.SetInt($"Highscore{i}", currentScore);
+                PlayerPrefs.SetString($"HighscorePlayer{i}", playerName);
+                break;
+            }
+            else
+            {
+                int savedScore = PlayerPrefs.GetInt($"Highscore{i}");
+                if (currentScore > savedScore)
+                {
+                    // Shift the lower scores down
+                    for (int j = 10; j > i; j--)
+                    {
+                        int scoreToShift = PlayerPrefs.GetInt($"Highscore{j - 1}");
+                        string playerToShift = PlayerPrefs.GetString($"HighscorePlayer{j - 1}");
+
+                        PlayerPrefs.SetInt($"Highscore{j}", scoreToShift);
+                        PlayerPrefs.SetString($"HighscorePlayer{j}", playerToShift);
+                    }
+
+                    PlayerPrefs.SetInt($"Highscore{i}", currentScore);
+                    PlayerPrefs.SetString($"HighscorePlayer{i}", playerName);
+                    break;
+                }
+            }
+        }
+        PlayerPrefs.Save();
     }
 
 }
