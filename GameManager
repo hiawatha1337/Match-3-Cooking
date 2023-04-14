@@ -7,6 +7,13 @@ public class GameManager : MonoBehaviour
     public GameBoard board;
     public TextMeshProUGUI turnCounterText;
     public GameObject reshufflePanel;
+    public SimpleScoringSystem scoringSystem;
+    public float gameTimeLimit = 60f; // Game time limit in seconds
+    private float elapsedTime = 0f; // To track elapsed time
+    public TextMeshProUGUI timeLimitText; // To display the remaining time
+    public TextMeshProUGUI totalScoreText; // To display the total score
+    public UIManager uiManager;
+    public PowerUpManager powerUpManager;
 
     private GameObject startingPiece;
     private List<GameObject> selectedPieces;
@@ -14,6 +21,8 @@ public class GameManager : MonoBehaviour
     private SpriteRenderer selectedSpriteRenderer;
     private Color redColor = new Color(1f, 0f, 0f, 1f);
     private int turnCounter = 0;
+    private bool isGameOver = false;
+    private bool gameStarted = false;
 
     void Start()
     {
@@ -24,90 +33,126 @@ public class GameManager : MonoBehaviour
         selectedSpriteRenderer.enabled = false;
         reshufflePanel.SetActive(false);
         StartCoroutine(CheckForReshuffle());
-
+        scoringSystem = FindObjectOfType<SimpleScoringSystem>();
+        powerUpManager = FindObjectOfType<PowerUpManager>();
     }
 
     void Update()
     {
-        currentMousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-        if (Input.GetMouseButtonDown(0))
+        if (!isGameOver && gameStarted)
         {
-            startingPiece = GetPieceAtMousePosition();
+            elapsedTime += Time.deltaTime;
 
-            if (startingPiece != null)
+            if (elapsedTime >= gameTimeLimit)
             {
-                selectedPieces.Clear();
-                selectedPieces.Add(startingPiece);
-                selectedSpriteRenderer.enabled = true;
-                selectedSpriteRenderer.transform.position = startingPiece.transform.position;
-                startingPiece.GetComponent<SpriteRenderer>().color = redColor;
+                // Time's up! Handle game over logic here.
+                Debug.Log("Time's up!");
+                isGameOver = true;
+                uiManager.ShowEndGameScreen();
+                return;
             }
-        }
 
-        if (Input.GetMouseButton(0) && startingPiece != null)
-        {
-            GameObject currentPiece = GetPieceAtMousePosition();
+            timeLimitText.SetText($"Time: {(gameTimeLimit - elapsedTime):0}");
+            totalScoreText.SetText($"Total Score: {scoringSystem.GetTotalScore()}");
+            currentMousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-            if (currentPiece != null && !selectedPieces.Contains(currentPiece))
+            if (Input.GetMouseButtonDown(0))
             {
-                if (IsNeighboringPiece(currentPiece) && currentPiece.tag == startingPiece.tag)
+                startingPiece = GetPieceAtMousePosition();
+
+                if (startingPiece != null)
                 {
-                    selectedPieces.Add(currentPiece);
-                    currentPiece.GetComponent<SpriteRenderer>().color = redColor;
+                    selectedPieces.Clear();
+                    selectedPieces.Add(startingPiece);
+                    selectedSpriteRenderer.enabled = true;
+                    selectedSpriteRenderer.transform.position = startingPiece.transform.position;
+                    startingPiece.GetComponent<SpriteRenderer>().color = redColor;
                 }
             }
-            else if (currentPiece != null && selectedPieces.Contains(currentPiece))
+
+            if (Input.GetMouseButton(0) && startingPiece != null)
             {
-                int currentIndex = selectedPieces.IndexOf(currentPiece);
-                for (int i = selectedPieces.Count - 1; i > currentIndex; i--)
+                GameObject currentPiece = GetPieceAtMousePosition();
+
+                if (currentPiece != null && !selectedPieces.Contains(currentPiece))
                 {
-                    GameObject deselectedPiece = selectedPieces[i];
-                    deselectedPiece.GetComponent<SpriteRenderer>().color = Color.white;
-                    selectedPieces.Remove(deselectedPiece);
+                    if (IsNeighboringPiece(currentPiece) && currentPiece.tag == startingPiece.tag)
+                    {
+                        selectedPieces.Add(currentPiece);
+                        currentPiece.GetComponent<SpriteRenderer>().color = redColor;
+                    }
+                }
+                else if (currentPiece != null && selectedPieces.Contains(currentPiece))
+                {
+                    int currentIndex = selectedPieces.IndexOf(currentPiece);
+                    for (int i = selectedPieces.Count - 1; i > currentIndex; i--)
+                    {
+                        GameObject deselectedPiece = selectedPieces[i];
+                        deselectedPiece.GetComponent<SpriteRenderer>().color = Color.white;
+                        selectedPieces.Remove(deselectedPiece);
+                    }
                 }
             }
-        }
 
-        if (Input.GetMouseButtonUp(0))
-        {
-            if (selectedPieces.Count >= 3)
+            if (Input.GetMouseButtonUp(0))
             {
+                if (selectedPieces.Count >= 3)
+                {
+                    foreach (GameObject piece in selectedPieces)
+                    {
+                        int x = Mathf.RoundToInt(piece.transform.position.x);
+                        int y = Mathf.RoundToInt(piece.transform.position.y);
+
+                        Destroy(piece);
+                        board.SpawnNewPiece(x, y);
+                    }
+
+                    // Apply power-up effect if active
+                    bool powerUpActive = powerUpManager.UsePowerUp();
+                    scoringSystem.AddPoints(startingPiece.tag, selectedPieces.Count, powerUpActive);
+
+                    // Increment turnCounter and update the UI
+                    turnCounter++;
+                    turnCounterText.SetText($"Turns: {turnCounter}");
+                }
+
+                // reset the color of all selected pieces
                 foreach (GameObject piece in selectedPieces)
                 {
-                    int x = Mathf.RoundToInt(piece.transform.position.x);
-                    int y = Mathf.RoundToInt(piece.transform.position.y);
-
-                    Destroy(piece);
-                    board.SpawnNewPiece(x, y);
+                    piece.GetComponent<SpriteRenderer>().color = Color.white;
                 }
 
-                // Increment turnCounter and update the UI
-                turnCounter++;
-                turnCounterText.SetText($"Turns: {turnCounter}");
+                selectedPieces.Clear();
+                startingPiece = null;
+                selectedSpriteRenderer.enabled = false;
             }
 
-            // reset the color of all selected pieces
-            foreach (GameObject piece in selectedPieces)
+            // update the position of the selection sprite
+            if (startingPiece != null)
             {
-                piece.GetComponent<SpriteRenderer>().color = Color.white;
+                selectedSpriteRenderer.transform.position = startingPiece.transform.position;
             }
 
-            selectedPieces.Clear();
-            startingPiece = null;
-            selectedSpriteRenderer.enabled = false;
-        }
+            if (!board.CheckForPossibleMatches())
+            {
+                board.ResetBoard();
+            }
 
-        // update the position of the selection sprite
-        if (startingPiece != null)
-        {
-            selectedSpriteRenderer.transform.position = startingPiece.transform.position;
-        }
+            if (CheckLevelCompletion())
+            {
+                // Trigger level completion actions (e.g., show a victory screen)
+            }
 
-        if (!board.CheckForPossibleMatches())
-        {
-            board.ResetBoard();
+            if (scoringSystem.AreAllSlidersFull())
+            {
+                // Add your level-ending code here
+            }
         }
+    }
+    public void StartGame()
+    {
+        gameStarted = true;
+        // You can also hide the starting screen here
     }
 
     GameObject GetPieceAtMousePosition()
@@ -157,6 +202,38 @@ public class GameManager : MonoBehaviour
                 yield return board.ResetBoard();
             }
         }
+    }
+    public bool CheckLevelCompletion()
+    {
+        int maxScore = 100; // Set this to the maximum score needed for the level
+        foreach (string ingredientTag in board.currentLevelIngredients)
+        {
+            int currentScore = scoringSystem.GetPoints(ingredientTag);
+            if (currentScore < maxScore)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    public void ResetGame()
+    {
+        // Reset the board
+        board.ResetBoard();
+
+        // Reset the timer
+        elapsedTime = 0f;
+
+        // Reset the turn counter
+        turnCounter = 0;
+
+        // Reset the game state
+        isGameOver = false;
+        gameStarted = false;
+
+        // Reset the scoring system
+        scoringSystem.ResetSliders();
+
     }
 
 }
