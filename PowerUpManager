@@ -1,0 +1,65 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class PowerUpManager : MonoBehaviour
+{
+    public SimpleScoringSystem scoringSystem;
+    public Button powerUpButton;
+    public TextMeshProUGUI turnsLeftText;
+
+    private bool powerUpAvailable = false;
+    private int powerUpTurnsRemaining = 0;
+
+    void Start()
+    {
+        powerUpButton.interactable = false; // Disable the button by default
+    }
+
+    void Update()
+    {
+        powerUpAvailable = scoringSystem.AreAllSlidersFull();
+        powerUpButton.interactable = powerUpAvailable;
+
+        if (powerUpTurnsRemaining > 0)
+        {
+            turnsLeftText.SetText($"{powerUpTurnsRemaining}");
+        }
+        else
+        {
+            turnsLeftText.SetText("");
+        }
+
+        // Check for hotkey press (e.g., spacebar)
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ActivatePowerUp();
+        }
+    }
+
+
+    public void ActivatePowerUp()
+    {
+        if (powerUpAvailable)
+        {
+            // Perform power-up logic here
+            Debug.Log("Power-up activated!");
+            powerUpTurnsRemaining = 5;
+
+            // Reset the sliders in the scoring system
+            scoringSystem.ResetSliders();
+        }
+    }
+
+    public bool UsePowerUp()
+    {
+        if (powerUpTurnsRemaining > 0)
+        {
+            powerUpTurnsRemaining--;
+            return true;
+        }
+
+        return false;
+    }
+
+}
