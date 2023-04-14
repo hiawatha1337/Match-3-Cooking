@@ -1,0 +1,50 @@
+using UnityEngine;
+
+public class UIManager : MonoBehaviour
+{
+    public GameObject startingScreen;
+    public GameObject endGameScreen;
+    public GameObject highscoreScreen;
+    public GameManager gameManager;
+
+    private void Start()
+    {
+        ShowStartingScreen();
+    }
+
+    public void ShowStartingScreen()
+    {
+        startingScreen.SetActive(true);
+        endGameScreen.SetActive(false);
+        highscoreScreen.SetActive(false);
+    }
+
+    public void ShowEndGameScreen()
+    {
+        startingScreen.SetActive(false);
+        endGameScreen.SetActive(true);
+        highscoreScreen.SetActive(false);
+    }
+
+    public void ShowHighscoreScreen()
+    {
+        startingScreen.SetActive(false);
+        endGameScreen.SetActive(false);
+        highscoreScreen.SetActive(true);
+    }
+
+    public void StartGame()
+    {
+        // Hide starting screen and show game elements
+        startingScreen.SetActive(false);
+    }
+
+    public void RestartGame()
+    {
+        // Restart the game by hiding the end game screen and showing starting screen
+        GameManager gameManager = FindObjectOfType<GameManager>();
+        gameManager.ResetGame();
+        ShowStartingScreen();
+    }
+
+}
