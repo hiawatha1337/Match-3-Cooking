@@ -45,9 +45,6 @@ public class PowerUpManager : MonoBehaviour
             // Perform power-up logic here
             Debug.Log("Power-up activated!");
             powerUpTurnsRemaining = 5;
-
-            // Reset the sliders in the scoring system
-            scoringSystem.ResetSliders();
         }
     }
 
@@ -60,6 +57,12 @@ public class PowerUpManager : MonoBehaviour
         }
 
         return false;
+    }
+    public void ResetPowerUps()
+    {
+        powerUpAvailable = false;
+        powerUpTurnsRemaining = 0;
+        powerUpButton.interactable = false;
     }
 
 }
